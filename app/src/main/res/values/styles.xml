@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 基础蓝色主题 -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:background">@color/background</item>
+    </style>
+
+    <!-- 绿色主题 -->
+    <style name="AppTheme.Green" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorPrimaryDark">@color/primary_dark_green</item>
+        <item name="colorAccent">@color/primary_green</item>
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:background">@color/background</item>
+    </style>
+
+    <!-- 无ActionBar的主题，用于ViewerActivity -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:background">@color/background</item>
+    </style>
+
+    <!-- 绿色无ActionBar的主题 -->
+    <style name="AppTheme.Green.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorPrimaryDark">@color/primary_dark_green</item>
+        <item name="colorAccent">@color/primary_green</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:background">@color/background</item>
+    </style>
+
+    <!-- Toolbar样式 -->
+    <style name="ToolbarStyle" parent="Widget.AppCompat.Toolbar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="theme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.Light</item>
+        <item name="titleTextColor">@android:color/white</item>
+    </style>
+
+    <!-- 按钮样式 -->
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:background">@drawable/button_selector</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">64dp</item>
+    </style>
+
+    <!-- 编辑文本样式 -->
+    <style name="EditTextStyle" parent="Widget.AppCompat.EditText">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <!-- Spinner样式 -->
+    <style name="SpinnerStyle" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@android:drawable/btn_dropdown</item>
+        <item name="android:popupBackground">@android:color/white</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+</resources>

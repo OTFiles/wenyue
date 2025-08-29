@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">文悦</string>
+    <string name="view">查看</string>
+    <string name="select_all">全选</string>
+    <string name="deselect_all">取消全选</string>
+    <string name="confirm">确认</string>
+    <string name="more">更多</string>
+    <string name="invalid_directory">无效目录</string>
+    <string name="no_files_selected">未选择文件</string>
+    <string name="no_viewable_files">没有可查看的文件</string>
+    <string name="cut_function">剪切功能</string>
+    <string name="copy_function">复制功能</string>
+    <string name="details_function">详情功能</string>
+    <string name="save">保存</string>
+    <string name="encoding">编码</string>
+    <string name="error_no_file">未选择文件</string>
+    <string name="message_save_success">保存成功</string>
+    <string name="error_save_failed">保存失败</string>
+    <string name="error_reading_file">读取文件时发生错误</string>
+    <string name="utf8">UTF-8</string>
+    <string name="gbk">GBK</string>
+    <string name="gb2312">GB2312</string>
+    <string name="iso88591">ISO-8859-1</string>
+    <string name="big5">Big5</string>
+    <string name="utf16be">UTF-16BE</string>
+    <string name="utf16le">UTF-16LE</string>
+    <string name="us_ascii">US-ASCII</string>
+    <string-array name="theme_options">
+        <item>蓝色主题</item>
+        <item>绿色主题</item>
+    </string-array>
+    <string-array name="encoding_options">
+        <item>UTF-8</item>
+        <item>GBK</item>
+        <item>GB2312</item>
+        <item>ISO-8859-1</item>
+        <item>Big5</item>
+        <item>UTF-16BE</item>
+        <item>UTF-16LE</item>
+        <item>US-ASCII</item>
+    </string-array>
+</resources>
