@@ -1,5 +1,9 @@
 package com.otfiles.wenyue.utils;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -8,13 +12,18 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class FileUtils {
 
@@ -32,6 +41,135 @@ public class FileUtils {
         "UTF-8", "GBK", "GB2312", "ISO-8859-1", "Big5", 
         "UTF-16", "UTF-16BE", "UTF-16LE", "US-ASCII"
     };
+
+    /**
+     * 对文件列表进行排序：文件夹在前，文件在后，按名称排序
+     * @param files 要排序的文件列表
+     * @return 排序后的文件列表
+     */
+    public static List<File> sortFiles(List<File> files) {
+        if (files == null || files.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 分离文件夹和文件
+        List<File> directories = new ArrayList<>();
+        List<File> fileList = new ArrayList<>();
+        
+        for (File file : files) {
+            if (file.isDirectory()) {
+                directories.add(file);
+            } else {
+                fileList.add(file);
+            }
+        }
+        
+        // 对文件夹和文件分别按名称排序
+        Collections.sort(directories, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                return f1.getName().compareToIgnoreCase(f2.getName());
+            }
+        });
+        
+        Collections.sort(fileList, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                return f1.getName().compareToIgnoreCase(f2.getName());
+            }
+        });
+        
+        // 合并结果：文件夹在前，文件在后
+        List<File> result = new ArrayList<>();
+        result.addAll(directories);
+        result.addAll(fileList);
+        
+        return result;
+    }
+
+    /**
+     * 判断文件是否为文本文件（通过扩展名）
+     * @param extension 文件扩展名
+     * @return 是否为文本文件
+     */
+    public static boolean isTextFile(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return false;
+        }
+        
+        String ext = extension.toLowerCase();
+        return ext.equals("txt") || 
+               ext.equals("xml") || 
+               ext.equals("html") || 
+               ext.equals("htm") || 
+               ext.equals("json") || 
+               ext.equals("js") || 
+               ext.equals("css") || 
+               ext.equals("java") || 
+               ext.equals("c") || 
+               ext.equals("cpp") || 
+               ext.equals("h") || 
+               ext.equals("py") || 
+               ext.equals("php") || 
+               ext.equals("log") || 
+               ext.equals("md");
+    }
+
+    /**
+     * 判断文件是否为图片文件（通过扩展名）
+     * @param extension 文件扩展名
+     * @return 是否为图片文件
+     */
+    public static boolean isImageFile(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return false;
+        }
+        
+        String ext = extension.toLowerCase();
+        return ext.equals("jpg") || 
+               ext.equals("jpeg") || 
+               ext.equals("png") || 
+               ext.equals("gif") || 
+               ext.equals("bmp") || 
+               ext.equals("webp");
+    }
+
+    /**
+     * 判断文件是否为音频文件（通过扩展名）
+     * @param extension 文件扩展名
+     * @return 是否为音频文件
+     */
+    public static boolean isAudioFile(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return false;
+        }
+        
+        String ext = extension.toLowerCase();
+        return ext.equals("mp3") || 
+               ext.equals("wav") || 
+               ext.equals("ogg") || 
+               ext.equals("flac") || 
+               ext.equals("aac");
+    }
+
+    /**
+     * 判断文件是否为视频文件（通过扩展名）
+     * @param extension 文件扩展名
+     * @return 是否为视频文件
+     */
+    public static boolean isVideoFile(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return false;
+        }
+        
+        String ext = extension.toLowerCase();
+        return ext.equals("mp4") || 
+               ext.equals("avi") || 
+               ext.equals("mkv") || 
+               ext.equals("mov") || 
+               ext.equals("wmv") || 
+               ext.equals("flv");
+    }
 
     /**
      * 检测文件编码
@@ -57,8 +195,12 @@ public class FileUtils {
      * 通过BOM标记检测编码
      */
     private static String detectEncodingByBOM(File file) {
-        try (FileInputStream fis = new FileInputStream(file);
-             BufferedInputStream bis = new BufferedInputStream(fis)) {
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
+        
+        try {
+            fis = new FileInputStream(file);
+            bis = new BufferedInputStream(fis);
             
             bis.mark(4);
             byte[] bom = new byte[4];
@@ -92,8 +234,21 @@ public class FileUtils {
             }
             
             bis.reset();
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + file.getAbsolutePath(), e);
         } catch (IOException e) {
             Log.e(TAG, "Error detecting encoding by BOM", e);
+        } finally {
+            try {
+                if (bis != null) {
+                    bis.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing streams", e);
+            }
         }
         
         return null;
@@ -120,9 +275,14 @@ public class FileUtils {
      * 检查文件是否可以用指定编码正确读取
      */
     private static boolean isValidEncoding(File file, String encoding) {
-        try (FileInputStream fis = new FileInputStream(file);
-             InputStreamReader isr = new InputStreamReader(fis, encoding);
-             BufferedReader br = new BufferedReader(isr)) {
+        FileInputStream fis = null;
+        InputStreamReader isr = null;
+        BufferedReader br = null;
+        
+        try {
+            fis = new FileInputStream(file);
+            isr = new InputStreamReader(fis, encoding);
+            br = new BufferedReader(isr);
             
             // 尝试读取前几行，如果没有异常，则认为编码有效
             for (int i = 0; i < 10; i++) {
@@ -136,8 +296,26 @@ public class FileUtils {
             }
             
             return true;
-        } catch (IOException e) {
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + file.getAbsolutePath(), e);
             return false;
+        } catch (IOException e) {
+            Log.e(TAG, "Error validating encoding: " + encoding, e);
+            return false;
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+                if (isr != null) {
+                    isr.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing streams", e);
+            }
         }
     }
     
@@ -153,19 +331,40 @@ public class FileUtils {
         }
         
         StringBuilder content = new StringBuilder();
+        FileInputStream fis = null;
+        InputStreamReader isr = null;
+        BufferedReader br = null;
         
-        try (FileInputStream fis = new FileInputStream(file);
-             InputStreamReader isr = new InputStreamReader(fis, encoding);
-             BufferedReader br = new BufferedReader(isr)) {
+        try {
+            fis = new FileInputStream(file);
+            isr = new InputStreamReader(fis, encoding);
+            br = new BufferedReader(isr);
             
             String line;
             while ((line = br.readLine()) != null) {
                 content.append(line).append("\n");
             }
             
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + file.getAbsolutePath(), e);
+            return "";
         } catch (IOException e) {
             Log.e(TAG, "Error reading file: " + file.getAbsolutePath(), e);
             return "";
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+                if (isr != null) {
+                    isr.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing streams", e);
+            }
         }
         
         return content.toString();
@@ -192,17 +391,39 @@ public class FileUtils {
             }
         }
         
-        try (FileOutputStream fos = new FileOutputStream(file);
-             OutputStreamWriter osw = new OutputStreamWriter(fos, encoding);
-             BufferedWriter bw = new BufferedWriter(osw)) {
+        FileOutputStream fos = null;
+        OutputStreamWriter osw = null;
+        BufferedWriter bw = null;
+        
+        try {
+            fos = new FileOutputStream(file);
+            osw = new OutputStreamWriter(fos, encoding);
+            bw = new BufferedWriter(osw);
             
             bw.write(content);
             bw.flush();
             return true;
             
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + file.getAbsolutePath(), e);
+            return false;
         } catch (IOException e) {
             Log.e(TAG, "Error saving file: " + file.getAbsolutePath(), e);
             return false;
+        } finally {
+            try {
+                if (bw != null) {
+                    bw.close();
+                }
+                if (osw != null) {
+                    osw.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing streams", e);
+            }
         }
     }
     
@@ -226,27 +447,31 @@ public class FileUtils {
     }
     
     /**
+     * 获取文件扩展名（从路径字符串）
+     * @param path 文件路径
+     * @return 文件扩展名（小写）
+     */
+    public static String getFileExtension(String path) {
+        if (path == null || path.isEmpty()) {
+            return "";
+        }
+        
+        int lastDotIndex = path.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < path.length() - 1) {
+            return path.substring(lastDotIndex + 1).toLowerCase();
+        }
+        
+        return "";
+    }
+    
+    /**
      * 判断文件是否为文本文件
      * @param file 文件
      * @return 是否为文本文件
      */
     public static boolean isTextFile(File file) {
         String extension = getFileExtension(file);
-        return extension.equals("txt") || 
-               extension.equals("xml") || 
-               extension.equals("html") || 
-               extension.equals("htm") || 
-               extension.equals("json") || 
-               extension.equals("js") || 
-               extension.equals("css") || 
-               extension.equals("java") || 
-               extension.equals("c") || 
-               extension.equals("cpp") || 
-               extension.equals("h") || 
-               extension.equals("py") || 
-               extension.equals("php") || 
-               extension.equals("log") || 
-               extension.equals("md");
+        return isTextFile(extension);
     }
     
     /**
@@ -305,8 +530,12 @@ public class FileUtils {
             }
         }
         
-        try (FileInputStream fis = new FileInputStream(src);
-             FileOutputStream fos = new FileOutputStream(dest)) {
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        
+        try {
+            fis = new FileInputStream(src);
+            fos = new FileOutputStream(dest);
             
             byte[] buffer = new byte[4096];
             int length;
@@ -315,9 +544,23 @@ public class FileUtils {
             }
             
             return true;
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + src.getAbsolutePath(), e);
+            return false;
         } catch (IOException e) {
             Log.e(TAG, "Error copying file", e);
             return false;
+        } finally {
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Error closing streams", e);
+            }
         }
     }
     
@@ -342,5 +585,83 @@ public class FileUtils {
         }
         
         return file.delete();
+    }
+    
+    /**
+     * 从文件路径获取文件名
+     * @param path 文件路径
+     * @return 文件名
+     */
+    public static String getFileName(String path) {
+        if (path == null || path.isEmpty()) {
+            return "";
+        }
+        int lastSeparator = path.lastIndexOf(File.separator);
+        return lastSeparator >= 0 ? path.substring(lastSeparator + 1) : path;
+    }
+    
+    /**
+     * 判断路径是否为目录
+     * @param path 路径
+     * @return 是否为目录
+     */
+    public static boolean isDirectory(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        File file = new File(path);
+        return file.exists() && file.isDirectory();
+    }
+    
+    /**
+     * 判断文件是否存在
+     * @param path 文件路径
+     * @return 是否存在
+     */
+    public static boolean fileExists(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        File file = new File(path);
+        return file.exists();
+    }
+    
+    /**
+     * 从Uri获取文件路径
+     * @param context 上下文
+     * @param uri 文件的Uri
+     * @return 文件路径
+     */
+    public static String getPathFromUri(Context context, Uri uri) {
+        if (uri == null) {
+            return null;
+        }
+        
+        // 如果Uri是文件协议，直接返回路径
+        if ("file".equals(uri.getScheme())) {
+            return uri.getPath();
+        }
+        
+        // 如果是content协议，尝试通过ContentResolver查询
+        if ("content".equals(uri.getScheme())) {
+            Cursor cursor = null;
+            try {
+                String[] projection = {MediaStore.Images.Media.DATA};
+                cursor = context.getContentResolver().query(uri, projection, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                    return cursor.getString(columnIndex);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting path from URI: " + e.getMessage());
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        
+        // 如果以上都不行，返回null
+        return null;
     }
 }

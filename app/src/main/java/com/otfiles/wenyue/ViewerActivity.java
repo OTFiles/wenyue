@@ -171,7 +171,11 @@ public class ViewerActivity extends AppCompatActivity {
             contents.set(currentPosition, content);
             
             if (isMultipleFiles) {
-                viewPager.getAdapter().notifyDataSetChanged();
+                // 更新ViewPager中的内容
+                ViewFragment fragment = getFragmentAtPosition(currentPosition);
+                if (fragment != null) {
+                    fragment.setContent(content);
+                }
             } else {
                 contentEdit.setText(content);
             }
@@ -185,9 +189,12 @@ public class ViewerActivity extends AppCompatActivity {
             String content;
             
             if (isMultipleFiles) {
-                ViewFragment fragment = (ViewFragment) ((ViewPagerAdapter) viewPager.getAdapter())
-                        .getItem(currentPosition);
-                content = fragment.getContent();
+                ViewFragment fragment = getFragmentAtPosition(currentPosition);
+                if (fragment != null) {
+                    content = fragment.getContent();
+                } else {
+                    content = contents.get(currentPosition);
+                }
             } else {
                 content = contentEdit.getText().toString();
             }
@@ -280,6 +287,28 @@ public class ViewerActivity extends AppCompatActivity {
         outState.putStringArrayList(STATE_ENCODINGS, new ArrayList<>(encodings));
     }
 
+    /**
+     * 获取指定位置的Fragment
+     */
+    private ViewFragment getFragmentAtPosition(int position) {
+        if (viewPager == null || viewPager.getAdapter() == null) {
+            return null;
+        }
+        
+        // 通过ViewPager的Adapter获取Fragment
+        for (int i = 0; i < viewPager.getChildCount(); i++) {
+            View view = viewPager.getChildAt(i);
+            if (view != null && view.getTag() != null && view.getTag() instanceof ViewFragment) {
+                ViewFragment fragment = (ViewFragment) view.getTag();
+                if (fragment.getPosition() == position) {
+                    return fragment;
+                }
+            }
+        }
+        
+        return null;
+    }
+
     private class ViewPagerAdapter extends PagerAdapter {
         @Override
         public int getCount() {
@@ -294,28 +323,33 @@ public class ViewerActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             ViewFragment fragment = new ViewFragment();
-            getSupportFragmentManager().beginTransaction().add(container.getId(), fragment).commit();
+            fragment.setPosition(position);
             
             if (position < contents.size()) {
                 fragment.setContent(contents.get(position));
             }
             
-            return fragment;
+            // 将Fragment添加到容器
+            View view = fragment.onCreateView(getLayoutInflater(), container, null);
+            container.addView(view);
+            
+            // 设置标签以便后续查找
+            view.setTag(fragment);
+            
+            return view;
         }
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
-            if (object instanceof ViewFragment) {
-                getSupportFragmentManager().beginTransaction().remove((ViewFragment) object).commit();
-            }
+            container.removeView((View) object);
         }
     }
 
-    public static class ViewFragment extends android.support.v4.app.Fragment {
+    public static class ViewFragment {
         private EditText contentEdit;
         private String content;
-
-        @Override
+        private int position;
+        
         public View onCreateView(android.view.LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.fragment_view, container, false);
             contentEdit = view.findViewById(R.id.content_edit);
@@ -339,6 +373,14 @@ public class ViewerActivity extends AppCompatActivity {
                 return contentEdit.getText().toString();
             }
             return content != null ? content : "";
+        }
+        
+        public void setPosition(int position) {
+            this.position = position;
+        }
+        
+        public int getPosition() {
+            return position;
         }
     }
 }
