@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#2196F3</color>
-    <color name="primary_dark">#1976D2</color>
-    <color name="background">#FAFAFA</color>
+    <color name="primary">#FF2196F3</color>
+    <color name="primary_dark">#FF1976D2</color>
+    <color name="background">#FFFAFAFA</color>
     <color name="text_primary">#DE000000</color>
     <color name="divider">#1F000000</color>
-    <color name="primary_green">#4CAF50</color>
-    <color name="primary_dark_green">#388E3C</color>
-    <color name="toolbar_background">#2196F3</color>
-    <color name="toolbar_text">#FFFFFF</color>
-    <color name="editor_background">#FFFFFF</color>
-    <color name="editor_text">#212121</color>
-    <color name="button_normal">#2196F3</color>
-    <color name="button_pressed">#1976D2</color>
-    <color name="toolbar_background_green">#4CAF50</color>
-    <color name="button_normal_green">#4CAF50</color>
-    <color name="button_pressed_green">#388E3C</color>
+    <color name="primary_green">#FF4CAF50</color>
+    <color name="primary_dark_green">#FF388E3C</color>
+    <color name="toolbar_background">#FF2196F3</color>
+    <color name="toolbar_text">#FFFFFFFF</color>
+    <color name="editor_background">#FFFFFFFF</color>
+    <color name="editor_text">#FF212121</color>
+    <color name="button_normal">#FF2196F3</color>
+    <color name="button_pressed">#FF1976D2</color>
+    <color name="toolbar_background_green">#FF4CAF50</color>
+    <color name="button_normal_green">#FF4CAF50</color>
+    <color name="button_pressed_green">#FF388E3C</color>
 </resources>
