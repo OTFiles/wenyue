@@ -632,6 +632,39 @@ public class FileUtils {
      * @param uri 文件的Uri
      * @return 文件路径
      */
+    /*public static String getPathFromUri(Context context, Uri uri) {
+        if (uri == null) {
+            return null;
+        }
+        
+        // 如果Uri是文件协议，直接返回路径
+        if ("file".equals(uri.getScheme())) {
+            return uri.getPath();
+        }
+        
+        // 如果是content协议，尝试通过ContentResolver查询
+        if ("content".equals(uri.getScheme())) {
+            Cursor cursor = null;
+            try {
+                String[] projection = {MediaStore.Images.Media.DATA};
+                cursor = context.getContentResolver().query(uri, projection, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                    return cursor.getString(columnIndex);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting path from URI: " + e.getMessage());
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        
+        // 如果以上都不行，返回null
+        return null;
+    }*/
+    
     public static String getPathFromUri(Context context, Uri uri) {
         if (uri == null) {
             return null;
@@ -654,6 +687,17 @@ public class FileUtils {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error getting path from URI: " + e.getMessage());
+                
+                // 如果上述方法失败，尝试另一种方法
+                try {
+                    InputStream inputStream = context.getContentResolver().openInputStream(uri);
+                    if (inputStream != null) {
+                        // 对于某些特殊URI，我们无法获取路径，只能返回null
+                        inputStream.close();
+                    }
+                } catch (IOException ioException) {
+                    Log.e(TAG, "Error opening stream from URI: " + ioException.getMessage());
+                }
             } finally {
                 if (cursor != null) {
                     cursor.close();

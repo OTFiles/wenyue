@@ -1,9 +1,13 @@
 package com.otfiles.wenyue;
 
+import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,7 +18,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.otfiles.wenyue.adapters.FileAdapter;
@@ -27,7 +30,8 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity"; // 日志标签
+    private static final String TAG = "MainActivity";
+    private static final int REQUEST_STORAGE_PERMISSION = 1;
     
     private RecyclerView favoritesList;
     private FileAdapter adapter;
@@ -35,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences preferences;
     private static final String PREFS_NAME = "FavoritesPrefs";
     private static final String KEY_FAVORITES = "favorites";
+    
+    // 用于存储从文件选择器返回的路径
+    private String selectedFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +49,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         
         Log.d(TAG, "onCreate: 活动创建");
-
+        
+        // 检查并请求存储权限
+        if (checkStoragePermission()) {
+            initializeApp();
+        }
+    }
+    
+    private boolean checkStoragePermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            
+            ActivityCompat.requestPermissions(this,
+                new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                },
+                REQUEST_STORAGE_PERMISSION);
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initializeApp();
+            } else {
+                Toast.makeText(this, "需要存储权限才能使用应用", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+    
+    private void initializeApp() {
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         
         // 初始化UI组件
@@ -84,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 if (position == favoritePaths.size()) {
                     // 点击了"添加收藏"按钮
                     Log.i(TAG, "添加收藏按钮被点击");
-                    showAddFavoriteDialog();
+                    showAddFavoriteDialog(null);
                 } else {
                     // 点击了收藏项
                     String path = favoritePaths.get(position);
@@ -103,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         
-        Log.d(TAG, "onCreate完成");
+        Log.d(TAG, "初始化完成");
     }
     
     private void loadFavorites() {
@@ -111,14 +153,6 @@ public class MainActivity extends AppCompatActivity {
         // 从SharedPreferences加载收藏列表
         Set<String> favoritesSet = preferences.getStringSet(KEY_FAVORITES, new HashSet<String>());
         favoritePaths = new ArrayList<String>(favoritesSet);
-        
-        // 如果没有收藏项，添加一些示例数据
-        if (favoritePaths.isEmpty()) {
-            Log.d(TAG, "收藏列表为空，添加示例数据");
-            favoritePaths.add("/sdcard/Documents");
-            favoritePaths.add("/sdcard/Download/example.txt");
-            saveFavorites();
-        }
         Log.d(TAG, "收藏列表加载完成，共 " + favoritePaths.size() + " 个项目");
     }
     
@@ -165,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    private void showAddFavoriteDialog() {
+    private void showAddFavoriteDialog(String prefillPath) {
         Log.i(TAG, "显示添加收藏对话框");
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
@@ -174,6 +208,11 @@ public class MainActivity extends AppCompatActivity {
         final EditText pathInput = dialogView.findViewById(R.id.path_input);
         View previewButton = dialogView.findViewById(R.id.preview_button);
         View confirmButton = dialogView.findViewById(R.id.confirm_button);
+        
+        // 预填充路径（如果有）
+        if (prefillPath != null) {
+            pathInput.setText(prefillPath);
+        }
         
         final AlertDialog dialog = builder.setView(dialogView).create();
         
@@ -261,12 +300,11 @@ public class MainActivity extends AppCompatActivity {
                 String path = FileUtils.getPathFromUri(this, data.getData());
                 if (path != null) {
                     Log.i(TAG, "文件选择器返回路径: " + path);
-                    // 更新对话框中的路径输入框
-                    View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_favorite, null);
-                    EditText pathInput = dialogView.findViewById(R.id.path_input);
-                    pathInput.setText(path);
+                    // 显示添加收藏对话框并预填充路径
+                    showAddFavoriteDialog(path);
                 } else {
                     Log.w(TAG, "无法从URI获取路径: " + data.getData());
+                    Toast.makeText(this, "无法获取文件路径", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Log.w(TAG, "文件选择器返回空数据");
@@ -280,39 +318,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume: 活动恢复");
-        // 重新加载收藏列表，以防在设置中更改了主题
-        loadFavorites();
-        adapter.updateData(favoritePaths);
-        Log.d(TAG, "收藏列表已更新");
-    }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause: 活动暂停");
-    }
-    
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy: 活动销毁");
-    }
-    
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart: 活动开始");
-    }
-    
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop: 活动停止");
-    }
-    
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        Log.d(TAG, "onRestart: 活动重新启动");
+        // 如果已经初始化，重新加载收藏列表
+        if (adapter != null) {
+            loadFavorites();
+            adapter.updateData(favoritePaths);
+            Log.d(TAG, "收藏列表已更新");
+        }
     }
 }
