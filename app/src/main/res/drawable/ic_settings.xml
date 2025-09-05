@@ -1,1 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?><svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M34.0003 41L44 24L34.0003 7H14.0002L4 24L14.0002 41H34.0003Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/><path d="M24 29C26.7614 29 29 26.7614 29 24C29 21.2386 26.7614 19 24 19C21.2386 19 19 21.2386 19 24C19 26.7614 21.2386 29 24 29Z" fill="none" stroke="#333" stroke-width="4" stroke-linejoin="round"/></svg>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:strokeColor="#FF333333"
+        android:strokeWidth="4"
+        android:strokeLineJoin="round"
+        android:pathData="M34 41L44 24 34 7H14L4 24 14 41H34Z"/>
+    <path
+        android:strokeColor="#FF333333"
+        android:strokeWidth="4"
+        android:strokeLineJoin="round"
+        android:pathData="M24 29C26.761 29 29 26.761 29 24 29 21.239 26.761 19 24 19 21.239 19 19 21.239 19 24 19 26.761 21.239 29 24 29Z"/>
+</vector>
